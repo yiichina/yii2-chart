@@ -1,24 +1,43 @@
 <?php
 
-namespace yiichina\ckeditor;
+namespace yiichina\chart;
 
-use yii\Helpers\Html;
+use yii\base\Widget;
+use yii\helpers\Html;
+use yii\helpers\Json;
 
 /**
  * This is just an example.
  */
-class CKEditor extends \yii\widgets\InputWidget
+class Chart extends Widget
 {
+    public $type;
+
+    public $data = [];
+
+    public $options = [];
+
+    public $clientOptions = [];
+
     public function init()
     {
         parent::init();
-        $view = $this->getView();
-        CKEditorAsset::register($view);
-		$view->registerJs("CKEDITOR.replace(\"{$this->options['id']}\")");
+
+        if ($this->type === null) {
+            throw new InvalidConfigException("The type option is required");
+        }
+
+        if (!isset($this->options['id'])) {
+            $this->options['id'] = $this->getId();
+        }
     }
 
     public function run()
     {
-        return Html::activeTextarea($this->model, $this->attribute);
+        $view = $this->getView();
+        ChartAsset::register($view);
+        $config = Json::encode(['type' => $this->type, 'data' => $this->data, 'options' => $this->clientOptions]);
+        $view->registerJs("var chart_{$this->options['id']} = new Chart($('#{$this->options['id']}'),$config);");
+        echo Html::tag('canvas', '', $this->options);
     }
 }
